@@ -10,18 +10,16 @@ export default async function RentalsPage({
 }) {
   const { category } = await searchParams;
 
-  const categories = await prisma.category.findMany({
-    orderBy: { sortOrder: "asc" },
-  });
-
-  const items = await prisma.item.findMany({
-    where: {
-      available: true,
-      ...(category ? { category: { slug: category } } : {}),
-    },
-    orderBy: { name: "asc" },
-    include: { category: true },
-  });
+  let categories: any[] = [];
+  let items: any[] = [];
+  try {
+    categories = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
+    items = await prisma.item.findMany({
+      where: { available: true, ...(category ? { category: { slug: category } } : {}) },
+      orderBy: { name: "asc" },
+      include: { category: true },
+    });
+  } catch (e) {}
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">

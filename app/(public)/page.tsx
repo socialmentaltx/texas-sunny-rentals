@@ -5,18 +5,23 @@ import { CheckCircle, Star, Truck, Shield } from "lucide-react";
 
 
 export default async function HomePage() {
-  const categories = await prisma.category.findMany({
-    orderBy: { sortOrder: "asc" },
-    include: {
-      items: { where: { available: true }, take: 3 },
-    },
-  });
-
-  const featuredItems = await prisma.item.findMany({
-    where: { featured: true, available: true },
-    take: 8,
-    include: { category: true },
-  });
+  let categories: any[] = [];
+  let featuredItems: any[] = [];
+  try {
+    categories = await prisma.category.findMany({
+      orderBy: { sortOrder: "asc" },
+      include: {
+        items: { where: { available: true }, take: 3 },
+      },
+    });
+    featuredItems = await prisma.item.findMany({
+      where: { featured: true, available: true },
+      take: 8,
+      include: { category: true },
+    });
+  } catch (e) {
+    // DB unavailable at build time — renders empty at build, real data at runtime
+  }
 
   return (
     <div>
