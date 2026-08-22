@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  imageUrl    String?
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  items       Item[]
+}
+
+model Item {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  price       Float
+  priceUnit   String    @default("day") // day, hour, event
+  imageUrl    String?
+  images      String[]  // additional images
+  dimensions  String?   // e.g. "15x15 ft"
+  ageRange    String?   // e.g. "3-12 years"
+  capacity    Int?
+  featured    Boolean   @default(false)
+  available   Boolean   @default(true)
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model ContactSubmission {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  eventDate DateTime?
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model AdminUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+}
+
+model ServiceArea {
+  id        String  @id @default(cuid())
+  city      String
+  slug      String  @unique
+  active    Boolean @default(true)
+}
+
+model SiteSettings {
+  id           String  @id @default("singleton")
+  businessName String  @default("Texas Sunny Rentals")
+  phone        String?
+  email        String?
+  address      String?
+  heroTitle    String?
+  heroSubtitle String?
+  metaTitle    String?
+  metaDesc     String?
+}
