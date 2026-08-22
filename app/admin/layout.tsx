@@ -1,8 +1,14 @@
 "use client";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Sun, LayoutDashboard, Package, Tag, MessageSquare, LogOut } from "lucide-react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isLogin = pathname === "/admin/login";
+
+  if (isLogin) return <>{children}</>;
+
   return (
     <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar */}
