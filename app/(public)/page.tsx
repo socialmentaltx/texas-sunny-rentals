@@ -1,8 +1,8 @@
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { CheckCircle, Star, Truck, Shield } from "lucide-react";
 
-export const revalidate = 60;
 
 export default async function HomePage() {
   const categories = await prisma.category.findMany({

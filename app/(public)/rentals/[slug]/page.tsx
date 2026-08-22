@@ -1,9 +1,9 @@
+export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Phone, Mail } from "lucide-react";
 
-export const revalidate = 60;
 
 export default async function ItemPage({
   params,
