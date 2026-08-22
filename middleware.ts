@@ -1,24 +1,34 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { jwtVerify } from "jose";
+
+const SECRET = new TextEncoder().encode(
+  process.env.NEXTAUTH_SECRET || "fallback-secret-change-me"
+);
 
 export async function middleware(req: NextRequest) {
-  const isAdminRoute = req.nextUrl.pathname.startsWith("/admin");
-  const isLoginPage = req.nextUrl.pathname === "/admin/login";
+  const { pathname } = req.nextUrl;
+  const isAdminRoute = pathname.startsWith("/admin");
+  const isLoginPage = pathname === "/admin/login";
 
   if (!isAdminRoute) return NextResponse.next();
 
-  const token = await getToken({
-    req,
-    secret: process.env.NEXTAUTH_SECRET,
-  });
+  const token = req.cookies.get("admin_session")?.value;
 
   if (isLoginPage && token) {
-    return NextResponse.redirect(new URL("/admin", req.url));
+    try {
+      await jwtVerify(token, SECRET);
+      return NextResponse.redirect(new URL("/admin", req.url));
+    } catch {}
   }
 
-  if (!isLoginPage && !token) {
-    return NextResponse.redirect(new URL("/admin/login", req.url));
+  if (!isLoginPage) {
+    if (!token) return NextResponse.redirect(new URL("/admin/login", req.url));
+    try {
+      await jwtVerify(token, SECRET);
+    } catch {
+      return NextResponse.redirect(new URL("/admin/login", req.url));
+    }
   }
 
   return NextResponse.next();

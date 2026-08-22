@@ -1,9 +1,10 @@
 "use client";
-import { signIn } from "next-auth/react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Sun } from "lucide-react";
 
 export default function AdminLogin() {
+  const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -11,21 +12,24 @@ export default function AdminLogin() {
     e.preventDefault();
     setLoading(true);
     setError("");
+
     const form = e.currentTarget;
     const email = (form.elements.namedItem("email") as HTMLInputElement).value;
     const password = (form.elements.namedItem("password") as HTMLInputElement).value;
 
-    const res = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
+    const res = await fetch("/api/admin/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
     });
 
-    if (res?.error) {
-      setError("Invalid email or password.");
-      setLoading(false);
+    if (res.ok) {
+      router.push("/admin");
+      router.refresh();
     } else {
-      window.location.href = "/admin";
+      const data = await res.json();
+      setError(data.error || "Invalid email or password.");
+      setLoading(false);
     }
   }
 
@@ -36,9 +40,7 @@ export default function AdminLogin() {
           <Sun className="w-8 h-8 text-orange-500" />
           <span className="font-black text-xl text-orange-700">Texas Sunny Rentals</span>
         </div>
-        <h1 className="text-2xl font-black text-center text-gray-800 mb-8">
-          Admin Login
-        </h1>
+        <h1 className="text-2xl font-black text-center text-gray-800 mb-8">Admin Login</h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -47,8 +49,8 @@ export default function AdminLogin() {
               name="email"
               type="email"
               required
+              defaultValue="admin@texassunnyrentals.com"
               className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400"
-              placeholder="admin@texassunnyrentals.com"
             />
           </div>
           <div>
@@ -61,9 +63,7 @@ export default function AdminLogin() {
             />
           </div>
 
-          {error && (
-            <p className="text-red-500 text-sm font-semibold">{error}</p>
-          )}
+          {error && <p className="text-red-500 text-sm font-semibold">{error}</p>}
 
           <button
             type="submit"

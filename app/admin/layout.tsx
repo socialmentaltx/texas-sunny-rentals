@@ -1,3 +1,4 @@
+"use client";
 import Link from "next/link";
 import { Sun, LayoutDashboard, Package, Tag, MessageSquare, LogOut } from "lucide-react";
 
@@ -35,13 +36,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
 
         <div className="p-4 border-t border-orange-600">
-          <Link
-            href="/api/auth/signout"
+          <button
+            onClick={async () => { await fetch('/api/admin/auth/logout', { method: 'POST' }); window.location.href = '/admin/login'; }}
             className="flex items-center gap-2 text-orange-300 hover:text-white text-sm"
           >
             <LogOut className="w-4 h-4" />
             Sign Out
-          </Link>
+          </button>
         </div>
       </aside>
 

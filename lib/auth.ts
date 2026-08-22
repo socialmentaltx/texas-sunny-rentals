@@ -1,49 +1,33 @@
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import { prisma } from "./prisma";
-import bcrypt from "bcryptjs";
+import { SignJWT, jwtVerify } from "jose";
+import { cookies } from "next/headers";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
-  trustHost: true,
-  providers: [
-    Credentials({
-      name: "credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+const SECRET = new TextEncoder().encode(
+  process.env.NEXTAUTH_SECRET || "fallback-secret-change-me"
+);
+const COOKIE_NAME = "admin_session";
 
-        const user = await prisma.adminUser.findUnique({
-          where: { email: credentials.email as string },
-        });
+export async function createSession(userId: string) {
+  const token = await new SignJWT({ userId })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime("7d")
+    .sign(SECRET);
+  return token;
+}
 
-        if (!user) return null;
+export async function getSession() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_NAME)?.value;
+  if (!token) return null;
+  try {
+    const { payload } = await jwtVerify(token, SECRET);
+    return payload as { userId: string };
+  } catch {
+    return null;
+  }
+}
 
-        const valid = await bcrypt.compare(
-          credentials.password as string,
-          user.password
-        );
-
-        if (!valid) return null;
-
-        return { id: user.id, email: user.email, name: user.name };
-      },
-    }),
-  ],
-  pages: {
-    signIn: "/admin/login",
-  },
-  session: { strategy: "jwt" },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) token.id = user.id;
-      return token;
-    },
-    async session({ session, token }) {
-      if (token) session.user.id = token.id as string;
-      return session;
-    },
-  },
-});
+export async function requireAuth() {
+  const session = await getSession();
+  if (!session) return null;
+  return session;
+}
